@@ -9,6 +9,8 @@ use Web::Scraper;
 use WWW::Mechanize;
 use WWW::Mechanize::GZip;
 use Encode;
+use File::Path;
+
  
 #my $mech = WWW::Mechanize->new();
 # anonfiles is gzipped
@@ -18,10 +20,12 @@ my $sleep_time = 5 * 60;  # 5 min
  
 # target pub archive
 my $pub_archive = "https://anonfiles.com/en/archive";
+my $local_dir = "pub/anonfiles";
 
 
 #
 # main entrance
+init();
 list();
 
 
@@ -47,13 +51,15 @@ sub list {
             my $c = $mech->get($url);
 
             
-            # extract filename
+            # extract filename and add prefix($local_dir)
             my $name_pattern = qw(<legend><b>(.*)</b>);
             if ($c->content() =~ /$name_pattern/g) {
-                $filename = $1;
+                print "filename : $1\n";
+                $filename = "$local_dir/$1";
             }
 
-            print "filename : $filename\n";
+            # simple skip file that already exists
+            next if (-e $filename);
 
             my @links_2 = $mech->find_all_links(class_regex => qr/download_button/i);
             for my $link ( @links_2 ) {
@@ -61,14 +67,18 @@ sub list {
 
                 print "Mechanize $url to $filename\n";
                 $mech->get($url, ':content_file' => $filename);
+                print "   ", -s $filename, " bytes\n";
             }
-
-            print "   ", -s $filename, " bytes\n";
         }
                  
         #if($encodingType == 1 ) { $HtmlData = encode("euc-kr", decode("utf-8", $HtmlData)) }
     }
     $seq = 1;
+}
+
+
+sub init {
+    File::Path::make_path($local_dir);
 }
 
 sub pull {

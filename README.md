@@ -11,5 +11,5 @@ see pl files
 
 TODO
 ====
- - Repeat to look at web sites periodically
- - file check to update
+ - look at web sites periodically
+ - file check to avoid duplication
