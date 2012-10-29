@@ -34,9 +34,11 @@ list();
 #
 # subroutines
 sub list {
+    print "Get a web archive listing page...\n";
     my $response = $mech->get($pub_archive);
      
     if ($response->is_success) {
+        print "Receiving lists...\n";
         my $HtmlData = $response->content();
         my $encodingType = 0;
      
@@ -54,20 +56,24 @@ sub list {
             # extract filename and add prefix($local_dir)
             my $name_pattern = qw(<legend><b>(.*)</b>);
             if ($c->content() =~ /$name_pattern/g) {
-                print "filename : $1\n";
                 $filename = "$local_dir/$1";
             }
 
             # simple skip file that already exists
-            next if (-e $filename);
+            if (-e $filename) {
+                print "  $filename already exists.(skip!)";
+                next;
+            }
 
             my @links_2 = $mech->find_all_links(class_regex => qr/download_button/i);
             for my $link ( @links_2 ) {
                 $url = $link->url_abs;
 
-                print "Mechanize $url to $filename\n";
+                print "  URL : $url\n";
+                print "  filename : $filename";
+
                 $mech->get($url, ':content_file' => $filename);
-                print "   ", -s $filename, " bytes\n";
+                print "(", -s $filename, ") bytes\n";
             }
         }
                  
